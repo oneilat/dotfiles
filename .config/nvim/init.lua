@@ -181,7 +181,6 @@ require("lazy").setup({
             "Trouble",
             "trouble",
             "lazy",
-            "mason",
             "notify",
             "toggleterm",
             "lazyterm",
@@ -209,29 +208,10 @@ require("lazy").setup({
     end,
   },
 
-  -- Better notifications
+  -- Better notifications (disabled as you had it)
   {
     "rcarriga/nvim-notify",
-    config = function()
-      require("notify").setup({
-        background_colour = "#000000",
-        fps = 30,
-        icons = {
-          DEBUG = "",
-          ERROR = "",
-          INFO = "",
-          TRACE = "✎",
-          WARN = ""
-        },
-        level = 2,
-        minimum_width = 50,
-        render = "default",
-        stages = "fade_in_slide_out",
-        timeout = 5000,
-        top_down = true
-      })
-      vim.notify = require("notify")
-    end,
+    enabled = false,
   },
 
   -- Colorscheme
@@ -332,68 +312,6 @@ require("lazy").setup({
     end,
   },
 
-  -- LSP
-  {
-    "neovim/nvim-lspconfig",
-    dependencies = {
-      "williamboman/mason.nvim",
-    },
-    config = function()
-      -- Setup mason for installing LSP servers
-      require("mason").setup({
-        ui = {
-          icons = {
-            package_installed = "✓",
-            package_pending = "➜",
-            package_uninstalled = "✗"
-          }
-        }
-      })
-
-      local lspconfig = require("lspconfig")
-      local capabilities = vim.lsp.protocol.make_client_capabilities()
-
-      -- Manually setup each server
-      -- You'll need to install these via :Mason
-      lspconfig.lua_ls.setup({
-        capabilities = capabilities,
-        settings = {
-          Lua = {
-            diagnostics = {
-              globals = { "vim" },
-            },
-            workspace = {
-              library = vim.api.nvim_get_runtime_file("", true),
-              checkThirdParty = false,
-            },
-            telemetry = {
-              enable = false,
-            },
-          },
-        },
-      })
-
-      lspconfig.pyright.setup({
-        capabilities = capabilities,
-      })
-
-      lspconfig.ts_ls.setup({
-        capabilities = capabilities,
-      })
-
-      -- LSP keymaps
-      vim.api.nvim_create_autocmd("LspAttach", {
-        callback = function(event)
-          local opts = { buffer = event.buf }
-          map("n", "gd", vim.lsp.buf.definition, opts)
-          map("n", "gr", vim.lsp.buf.references, opts)
-          map("n", "K", vim.lsp.buf.hover, opts)
-          map("n", "<leader>ca", vim.lsp.buf.code_action, opts)
-          map("n", "<leader>rn", vim.lsp.buf.rename, opts)
-        end,
-      })
-    end,
-  },
   -- Completion
   {
     "hrsh7th/nvim-cmp",
@@ -429,20 +347,39 @@ require("lazy").setup({
               fallback()
             end
           end, { "i", "s" }),
+          ["<S-Tab>"] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
         }),
         sources = cmp.config.sources({
           { name = "nvim_lsp" },
-          { name = "codeium" },
           { name = "luasnip" },
           { name = "buffer" },
           { name = "path" },
         }),
+        formatting = {
+          format = function(entry, vim_item)
+            -- Add source name
+            vim_item.menu = ({
+              nvim_lsp = "[LSP]",
+              luasnip = "[Snippet]",
+              buffer = "[Buffer]",
+              path = "[Path]",
+            })[entry.source.name]
+            return vim_item
+          end
+        },
       })
     end,
   },
 
-
-  -- Codeium
+  -- Codeium (removed codeium source from cmp since it wasn't in dependencies)
   {
     "Exafunction/codeium.nvim",
     dependencies = {
@@ -462,9 +399,12 @@ require("lazy").setup({
     build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({
-        ensure_installed = { "lua", "python", "javascript", "typescript", "html", "css" },
+        ensure_installed = { "lua", "python", "javascript", "typescript", "html", "css", "json", "markdown" },
         auto_install = true,
-        highlight = { enable = true },
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = false,
+        },
         indent = { enable = true },
       })
     end,
@@ -482,11 +422,17 @@ require("lazy").setup({
           topdelete = { text = "‾" },
           changedelete = { text = "~" },
         },
-      })
+        on_attach = function(bufnr)
+          local gs = package.loaded.gitsigns
 
-      map("n", "<leader>hs", ":Gitsigns stage_hunk<CR>")
-      map("n", "<leader>hr", ":Gitsigns reset_hunk<CR>")
-      map("n", "<leader>hp", ":Gitsigns preview_hunk<CR>")
+          -- Keymaps
+          map("n", "<leader>hs", gs.stage_hunk, { buffer = bufnr })
+          map("n", "<leader>hr", gs.reset_hunk, { buffer = bufnr })
+          map("n", "<leader>hp", gs.preview_hunk, { buffer = bufnr })
+          map("n", "<leader>hb", function() gs.blame_line { full = true } end, { buffer = bufnr })
+          map("n", "<leader>tb", gs.toggle_current_line_blame, { buffer = bufnr })
+        end
+      })
     end,
   },
 
@@ -494,7 +440,16 @@ require("lazy").setup({
   {
     "windwp/nvim-autopairs",
     config = function()
-      require("nvim-autopairs").setup({})
+      local autopairs = require("nvim-autopairs")
+      autopairs.setup({})
+
+      -- Integration with cmp
+      local cmp_autopairs = require('nvim-autopairs.completion.cmp')
+      local cmp = require('cmp')
+      cmp.event:on(
+        'confirm_done',
+        cmp_autopairs.on_confirm_done()
+      )
     end,
   },
 
@@ -509,6 +464,8 @@ require("lazy").setup({
   -- Surround
   {
     "kylechui/nvim-surround",
+    version = "*", -- Use for stability; omit to use `main` branch for the latest features
+    event = "VeryLazy",
     config = function()
       require("nvim-surround").setup()
     end,
@@ -517,6 +474,7 @@ require("lazy").setup({
   -- Flash (better navigation)
   {
     "folke/flash.nvim",
+    event = "VeryLazy",
     config = function()
       require("flash").setup()
       map({ "n", "x", "o" }, "s", function() require("flash").jump() end)
@@ -565,12 +523,15 @@ autocmd("BufWritePre", {
   command = ":%s/\\s\\+$//e",
 })
 
--- Auto-format on save for specific filetypes
+-- Auto-format on save for specific filetypes (with error handling)
 augroup("AutoFormat", { clear = true })
 autocmd("BufWritePre", {
   group = "AutoFormat",
   pattern = { "*.lua", "*.py", "*.js", "*.ts" },
   callback = function()
-    vim.lsp.buf.format({ async = false })
+    local clients = vim.lsp.get_active_clients({ bufnr = 0 })
+    if #clients > 0 then
+      vim.lsp.buf.format({ async = false, timeout_ms = 2000 })
+    end
   end,
 })
