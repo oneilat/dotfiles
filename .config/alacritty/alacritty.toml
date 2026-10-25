@@ -1,0 +1,69 @@
+# Alacritty translation of the Ghostty setup in ~/.config/ghostty/config.
+# Colors are Ghostty's built-in dark palette (background #282c34, Tomorrow ANSI).
+# Cursor and selection match the "Ghostty Default Style Dark" theme.
+
+[window]
+decorations = "Transparent"
+opacity = 0.96
+padding = { x = 10, y = 10 }
+option_as_alt = "None"
+
+[font]
+size = 13.0
+
+[font.normal]
+family = "JetBrainsMono Nerd Font"
+style = "Regular"
+
+[font.bold]
+family = "JetBrainsMono Nerd Font"
+style = "Bold"
+
+[font.italic]
+family = "JetBrainsMono Nerd Font"
+style = "Italic"
+
+[font.bold_italic]
+family = "JetBrainsMono Nerd Font"
+style = "Bold Italic"
+
+[cursor]
+style = { shape = "Block", blinking = "Off" }
+
+[selection]
+save_to_clipboard = true
+
+[terminal]
+shell = { program = "/bin/zsh", args = ["--login"] }
+
+[colors.primary]
+background = "#282c34"
+foreground = "#ffffff"
+
+[colors.cursor]
+text = "#353a44"
+cursor = "#ffffff"
+
+[colors.selection]
+text = "#282c34"
+background = "#ffffff"
+
+[colors.normal]
+black = "#1d1f21"
+red = "#cc6666"
+green = "#b5bd68"
+yellow = "#f0c674"
+blue = "#81a2be"
+magenta = "#b294bb"
+cyan = "#8abeb7"
+white = "#c5c8c6"
+
+[colors.bright]
+black = "#666666"
+red = "#d54e53"
+green = "#b9ca4a"
+yellow = "#e7c547"
+blue = "#7aa6da"
+magenta = "#c397d8"
+cyan = "#70c0b1"
+white = "#eaeaea"

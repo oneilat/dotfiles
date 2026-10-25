@@ -1,0 +1,63 @@
+# ~/.config/starship.toml
+
+add_newline = true
+command_timeout = 1000
+
+format = """
+$os\
+$directory\
+$git_branch\
+$git_status\
+$python\
+$nodejs\
+$rust\
+$golang\
+$docker_context\
+$line_break\
+$character"""
+
+[character]
+success_symbol = "[❯](bold #b8bb26)" # green
+error_symbol = "[❯](bold #fb4934)"   # red
+
+[directory]
+truncation_length = 3
+truncation_symbol = "…/"
+style = "bold #83a598" # blue
+
+[git_branch]
+symbol = " "
+style = "bold #d3869b" # purple
+format = "[$symbol$branch]($style) "
+
+[git_status]
+format = '([\[$all_status$ahead_behind\]]($style) )'
+style = "bold #fe8019" # orange
+
+[cmd_duration]
+min_time = 2_000
+format = "took [$duration]($style) "
+style = "#928374"
+
+[python]
+symbol = "🐍 "
+format = "[${symbol}${version}]($style) "
+style = "#fabd2f"
+
+[nodejs]
+symbol = " "
+format = "[${symbol}${version}]($style) "
+style = "#83a598"
+
+[rust]
+symbol = "🦀 "
+format = "[${symbol}${version}]($style) "
+style = "#fe8019"
+
+[golang]
+symbol = "🐹 "
+format = "[${symbol}${version}]($style) "
+style = "#8ec07c"
+
+[os]
+disabled = true
